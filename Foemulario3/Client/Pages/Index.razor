@@ -1,0 +1,102 @@
+﻿@page "/"
+
+@foreach (Usuario naLista in listaUsuarios)
+{
+
+<tr>
+    <td>@naLista.Id</td>
+    <td>@naLista.Nome</td>
+    <td>@naLista.Idade</td>
+
+    <td><button class="btn btn-primary" @onclick="() => Deletar(naLista)">Deletar</button></td>
+
+    <td><button class="btn btn-primary" @onclick="() => Alterar(naLista)">Alterar</button></td>
+
+</tr>}
+Bla
+
+
+<EditForm Model="@atual" OnValidSubmit="@(() => Adicionar(atual))">
+
+    <DataAnnotationsValidator></DataAnnotationsValidator>
+    <ValidationSummary></ValidationSummary>
+
+    <label>Nome:</label>
+    <InputText @bind-Value="atual.Nome"></InputText>
+    <label>Idade:</label>
+    <InputNumber @bind-Value="atual.Idade"></InputNumber>
+    <button type="submit" class="btn btn-primary">Adiciona</button>
+
+</EditForm>
+
+<div class="Atualizar" style="visibility:@mostrar">
+    <EditForm Model="@usuario1" OnValidSubmit="@(() => Confirma(usuario1))">
+
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+        @usuario1.Nome
+        <label>Nome:</label>
+        <InputText @bind-Value="usuario1.Nome"></InputText>
+        <label>Idade:</label>
+        <InputNumber @bind-Value="usuario1.Idade"></InputNumber>
+        <button type="submit" class="btn btn-primary">Confirma</button>
+        @usuario1.Nome
+    </EditForm>
+</div>
+
+@code{ public Usuario usuario1 = new Usuario();
+            public Usuario atual = new Usuario();
+            List<Usuario> listaUsuarios = new List<Usuario>();
+
+            string mostrar = "hidden";
+            int cont = 0;
+
+            protected override void OnInitialized()
+            {
+
+                Usuario usuario1 = new Usuario { Id = 1, Nome = "Snake", Idade = 30 };
+                Usuario usuario2 = new Usuario { Id = 2, Nome = "Protoman", Idade = 18 };
+                Usuario usuario3 = new Usuario { Id = 3, Nome = "Shiryu", Idade = 14 };
+                Usuario usuario4 = new Usuario { Id = 4, Nome = "RockLee", Idade = 16 };
+                Usuario usuario5 = new Usuario { Id = 5, Nome = "Picolo", Idade = 23 };
+
+                listaUsuarios.Add(usuario1);
+                listaUsuarios.Add(usuario2);
+                listaUsuarios.Add(usuario3);
+                listaUsuarios.Add(usuario4);
+                listaUsuarios.Add(usuario5);
+
+                cont = listaUsuarios.Count;
+            }
+
+            public void Adicionar(Usuario atual)
+            {
+                Usuario novo = new Usuario();
+                novo.Nome = atual.Nome;
+                novo.Idade = atual.Idade;
+                listaUsuarios.Add(novo);
+
+                cont++;
+            }
+
+            public void Alterar(Usuario usuario)
+            {
+                usuario1 = usuario;
+                mostrar = "visible";
+
+            }
+
+            public void Confirma(Usuario usuario)
+            {
+                mostrar = "hidden";
+            }
+
+            public void Deletar(Usuario usuario)
+            {
+                if (listaUsuarios != null)
+                {
+                    var item = listaUsuarios.Find(buscaId => buscaId.Id == usuario.Id);
+                    listaUsuarios.Remove(item);
+                }
+            } 
+    }
