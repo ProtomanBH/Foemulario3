@@ -1,4 +1,5 @@
 ﻿using Foemulario3.Server.Models;
+using Foemulario3.Shared;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
@@ -17,5 +18,7 @@ namespace Foemulario3.Server.Data
             IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
         {
         }
+
+        public DbSet<Usuario> Usuarios { get; set; }
     }
 }
