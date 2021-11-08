@@ -16,7 +16,7 @@ namespace Foemulario3.Shared
         [Required(ErrorMessage = "O nome é obrigatório!")]
         public string Nome { get; set; }
 
-        [Range(18, 120, ErrorMessage = "A idade deve ser maior que 18")]
+        [Range(18, 1000, ErrorMessage = "A idade deve ser maior que 18")]
         public int Idade { get; set; }
 
     }

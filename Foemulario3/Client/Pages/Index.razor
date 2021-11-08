@@ -10,14 +10,24 @@
         <td>@naLista.Idade</td>
 
         <td><button class="btn btn-primary" @onclick="() => Deletar(naLista)">Deletar</button></td>
-
         <td><button class="btn btn-primary" @onclick="() => Alterar(naLista)">Alterar</button></td>
 
-    </tr>}
-Bla
+    </tr>
+}
+Bla bla bla
+<p>
+    <label>Digite o Id da pessoa Buscada: </label>
+    <input type="number" @bind-Value="_Id" @bind-Value:event="oninput" />
 
+    @*<InputNumber @bind-Value="pessoa1.Id" @bind-value:event="oninput"></InputNumber>*@
+</p>
 
-<EditForm Model="@atual" OnValidSubmit="@(() => Adicionar(atual))">
+<td><button class="btn btn-primary" @onclick="() => BuscaTodos()">Busca Todos</button></td>
+
+@*<button @onclick="(() => add())" type="submit"> Enviar </button>*@
+<button @onclick="Buscar"> Buscar </button>
+
+<EditForm Model="atual" OnValidSubmit="@(() => Adicionar(atual))">
 
     <DataAnnotationsValidator></DataAnnotationsValidator>
     <ValidationSummary></ValidationSummary>
@@ -30,62 +40,66 @@ Bla
 
 </EditForm>
 
+
 <div class="Atualizar" style="visibility:@mostrar">
     <EditForm Model="@usuario1" OnValidSubmit="@(() => Confirma(usuario1))">
 
         <DataAnnotationsValidator></DataAnnotationsValidator>
         <ValidationSummary></ValidationSummary>
-        @usuario1.Nome
+       
         <label>Nome:</label>
         <InputText @bind-Value="usuario1.Nome"></InputText>
         <label>Idade:</label>
         <InputNumber @bind-Value="usuario1.Idade"></InputNumber>
         <button type="submit" class="btn btn-primary">Confirma</button>
-        @usuario1.Nome
+        
     </EditForm>
 </div>
 
-<p>
-    <label>Digite o Id da pessoa Buscada: </label>
-    <input type="number" @bind-value="_Id" @bind-value:event="oninput" />
-
-    @*<InputNumber @bind-Value="pessoa1.Id" @bind-value:event="oninput"></InputNumber>*@
-</p>
-
-@*<button @onclick="(() => add())" type="submit"> Enviar </button>*@
-<button @onclick="Buscar"> Buscar </button>
-
 <div class="text-sucess">
-    <p>A Pessoa buscada é: Id: @usuario1.Id,  Nome: @usuario1.Nome</p>
+    <p>A Pessoa buscada é: Id: @atual.Id,  Nome: @atual.Nome, Idade: @atual.Idade</p>
 
 </div>
 
-@code{ 
+@code{
     public Usuario usuario1 = new Usuario();
     public Usuario atual = new Usuario();
     List<Usuario> listaUsuarios = new List<Usuario>();
-
+    int id;
     string mostrar = "hidden";
     int cont = 0;
 
     private int _Id { get; set; }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await BuscaTodos();
+    }
+
     protected override void OnInitialized()
     {
+        /*
+        Usuario usuario1 = new Usuario { Id = 1, Nome = "Superman", Idade = 32 };
+        Usuario usuario2 = new Usuario { Id = 2, Nome = "Batman", Idade = 33 };
+        Usuario usuario3 = new Usuario { Id = 3, Nome = "Lanterna Verde", Idade = 31 };
+        Usuario usuario4 = new Usuario { Id = 4, Nome = "Flash", Idade = 26 };
+        Usuario usuario5 = new Usuario { Id = 5, Nome = "Wolverine", Idade = 130 };
 
-        Usuario usuario1 = new Usuario { Id = 1, Nome = "Snake", Idade = 30 };
-        Usuario usuario2 = new Usuario { Id = 2, Nome = "Protoman", Idade = 18 };
-        Usuario usuario3 = new Usuario { Id = 3, Nome = "Shiryu", Idade = 14 };
-        Usuario usuario4 = new Usuario { Id = 4, Nome = "RockLee", Idade = 16 };
-        Usuario usuario5 = new Usuario { Id = 5, Nome = "Picolo", Idade = 23 };
-
-        listaUsuarios.Add(usuario1);
-        listaUsuarios.Add(usuario2);
-        listaUsuarios.Add(usuario3);
-        listaUsuarios.Add(usuario4);
-        listaUsuarios.Add(usuario5);
-
+        atual = usuario1;
+        Adicionar(atual);
+        atual = usuario2;
+        Adicionar(atual);
+        atual = usuario3;
+        Adicionar(atual);
+        atual = usuario4;
+        Adicionar(atual);
+        atual = usuario5;
+        Adicionar(atual);
+               
         cont = listaUsuarios.Count;
+        */
+
+
     }
 
     /*
@@ -100,39 +114,61 @@ Bla
     }
     */
 
-
-    public void Buscar()
+    public async Task BuscaTodos()
     {
-        Usuario buscado = injecao_Http.GetFromJsonAsync<Usuario>("api/Usuario/BuscaUsuario" + _Id);
-        StateHasChanged();
-
+        listaUsuarios = await injecao_Http.GetFromJsonAsync<List<Usuario>>("api/Usuario/BuscaListaUsuarios");
     }
 
-    public void Adicionar(Usuario atual)
+    public async void Buscar()
     {
-        injecao_Http.PostAsJsonAsync<Usuario>("api/Usuario/AdicionaUsuario", atual);
-        StateHasChanged();
+        Usuario buscado = await injecao_Http.GetFromJsonAsync<Usuario>("api/Usuario/BuscaUsuario/" + _Id);
 
+        atual.Id = buscado.Id;
+        atual.Nome = buscado.Nome;
+        atual.Idade = buscado.Idade;
+
+        StateHasChanged();
     }
 
-    public void Alterar(Usuario usuario)
+    public async void Adicionar(Usuario novo)
     {
+
+        HttpResponseMessage e = await injecao_Http.PostAsJsonAsync<Usuario>("api/Usuario/AdicionaUsuario", atual);
+
+        if (e.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Deu  super bom");
+        }
+        else
+        {
+            Console.WriteLine("Deu  super ruim");
+
+        }
+
+        listaUsuarios.Add(atual);
+        StateHasChanged();
+    }
+
+    public async void Alterar(Usuario usuario)
+    {
+
         usuario1 = usuario;
         mostrar = "visible";
+        StateHasChanged();
+    }
+
+    public async void Deletar(Usuario usuario)
+    {
+        await injecao_Http.DeleteAsync("api/Usuario/DeletaUsuario/" + usuario.Nome);
+        //var item = listaUsuarios.Find(buscaId => buscaId.Id == usuario.Id);
+        //listaUsuarios.Remove(item);
+        StateHasChanged();
 
     }
 
-    public void Confirma(Usuario usuario)
+    public async void Confirma(Usuario usuario)
     {
+        await injecao_Http.PutAsJsonAsync<Usuario>("api/Usuario/AlteraUsuario", usuario);
         mostrar = "hidden";
-    }
-
-    public void Deletar(Usuario usuario)
-    {
-        if (listaUsuarios != null)
-        {
-            var item = listaUsuarios.Find(buscaId => buscaId.Id == usuario.Id);
-            listaUsuarios.Remove(item);
-        }
     }
 }
