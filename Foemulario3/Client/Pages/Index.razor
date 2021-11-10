@@ -1,6 +1,21 @@
 ﻿@page "/"
 @inject HttpClient injecao_Http
 
+ 
+@using System.Collections.ObjectModel
+
+ 
+<DxDataGrid Data="@listaUsuarios"
+            InitNewRow="@OnInitNewRowAsync"
+            RowInsertingAsync="@OnRowInsertAsync"
+           >
+    
+    <DxDataGridCommandColumn Width="250px" />
+    <DxDataGridColumn Field="@nameof(Usuario.Nome)" Caption="Nomes"/>
+    <DxDataGridSpinEditColumn Field="@nameof(Usuario.Idade)" Caption="Idades" TextAlignment="DataGridTextAlign.Left" Width="250px" />
+</DxDataGrid>
+
+
 @foreach (Usuario naLista in listaUsuarios)
 {
 
@@ -62,7 +77,9 @@
 </div>
 
 @code{
+
     public Usuario usuario1 = new Usuario();
+    public Usuario usuario2 = new Usuario();
     public Usuario atual = new Usuario();
     List<Usuario> listaUsuarios = new List<Usuario>();
     int id;
@@ -179,4 +196,31 @@
         await injecao_Http.PutAsJsonAsync<Usuario>("api/Usuario/AlteraUsuario", usuario);
         mostrar = "hidden";
     }
+
+    Task OnInitNewRowAsync(Dictionary<string, object> Valores)
+    {
+        Valores.Add(nameof(Usuario.Nome), "Nome da Pessoa");
+        return Task.CompletedTask;
+    }
+
+    async Task OnRowInsertAsync(IDictionary<string, object> novosValores) {
+
+        Usuario criado = new Usuario();
+        criado = DicionarioToObject.DictionaryToUsuario(criado, novosValores);
+        HttpResponseMessage e = await injecao_Http.PostAsJsonAsync<Usuario>("api/Usuario/AdicionaUsuario", criado);
+
+        if (e.IsSuccessStatusCode)
+        {
+            //Atualiza tabela
+            Usuario U = await e.Content.ReadFromJsonAsync<Usuario>();
+            criado.Id = U.Id;
+            listaUsuarios.Add(criado);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Erro ao adicionar");
+        }
+    }
+
 }
