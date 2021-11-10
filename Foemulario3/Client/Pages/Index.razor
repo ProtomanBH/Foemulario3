@@ -1,6 +1,21 @@
 ﻿@page "/"
 @inject HttpClient injecao_Http
 
+ 
+@using System.Collections.ObjectModel
+
+ 
+<DxDataGrid Data="@listaUsuarios"
+            InitNewRow="@OnInitNewRowAsync"
+            RowInsertingAsync="@OnRowInsertAsync"
+           >
+    
+    <DxDataGridCommandColumn Width="250px" />
+    <DxDataGridColumn Field="@nameof(Usuario.Nome)" Caption="Nomes"/>
+    <DxDataGridSpinEditColumn Field="@nameof(Usuario.Idade)" Caption="Idades" TextAlignment="DataGridTextAlign.Left" Width="250px" />
+</DxDataGrid>
+
+
 @foreach (Usuario naLista in listaUsuarios)
 {
 
@@ -14,7 +29,7 @@
 
     </tr>
 }
-Bla bla bla
+
 <p>
     <label>Digite o Id da pessoa Buscada: </label>
     <input type="number" @bind-Value="_Id" @bind-Value:event="oninput" />
@@ -27,7 +42,7 @@ Bla bla bla
 @*<button @onclick="(() => add())" type="submit"> Enviar </button>*@
 <button @onclick="Buscar"> Buscar </button>
 
-<EditForm Model="atual" OnValidSubmit="@(() => Adicionar(atual))">
+<EditForm Model="@atual" OnValidSubmit="@(() => Adicionar(atual))">
 
     <DataAnnotationsValidator></DataAnnotationsValidator>
     <ValidationSummary></ValidationSummary>
@@ -60,11 +75,11 @@ Bla bla bla
     <p>A Pessoa buscada é: Id: @atual.Id,  Nome: @atual.Nome, Idade: @atual.Idade</p>
 
 </div>
-<DxDataGrid>
 
-</DxDataGrid>
 @code{
+
     public Usuario usuario1 = new Usuario();
+    public Usuario usuario2 = new Usuario();
     public Usuario atual = new Usuario();
     List<Usuario> listaUsuarios = new List<Usuario>();
     int id;
@@ -140,15 +155,15 @@ Bla bla bla
         if (e.IsSuccessStatusCode)
         {
             Console.WriteLine("Deu  super bom");
+            novo = await e.Content.ReadFromJsonAsync<Usuario>();
+            listaUsuarios.Add(novo);
+            StateHasChanged();
         }
         else
         {
             Console.WriteLine("Deu  super ruim");
 
         }
-
-        listaUsuarios.Add(atual);
-        StateHasChanged();
     }
 
     public async void Alterar(Usuario usuario)
@@ -161,11 +176,19 @@ Bla bla bla
 
     public async void Deletar(Usuario usuario)
     {
-        await injecao_Http.DeleteAsync("api/Usuario/DeletaUsuario/" + usuario.Nome);
-        //var item = listaUsuarios.Find(buscaId => buscaId.Id == usuario.Id);
-        //listaUsuarios.Remove(item);
-        StateHasChanged();
 
+        HttpResponseMessage e = await injecao_Http.DeleteAsync("api/Usuario/DeletaUsuario/" + usuario.Id);
+
+        if (e.IsSuccessStatusCode)
+        {
+            //usuario = await e.Content.ReadFromJsonAsync<Usuario>();
+            listaUsuarios.Remove(listaUsuarios.First(e => e.Id == usuario.Id));
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Deu ruim");
+        }
     }
 
     public async void Confirma(Usuario usuario)
@@ -173,4 +196,31 @@ Bla bla bla
         await injecao_Http.PutAsJsonAsync<Usuario>("api/Usuario/AlteraUsuario", usuario);
         mostrar = "hidden";
     }
+
+    Task OnInitNewRowAsync(Dictionary<string, object> Valores)
+    {
+        Valores.Add(nameof(Usuario.Nome), "Nome da Pessoa");
+        return Task.CompletedTask;
+    }
+
+    async Task OnRowInsertAsync(IDictionary<string, object> novosValores) {
+
+        Usuario criado = new Usuario();
+        criado = DicionarioToObject.DictionaryToUsuario(criado, novosValores);
+        HttpResponseMessage e = await injecao_Http.PostAsJsonAsync<Usuario>("api/Usuario/AdicionaUsuario", criado);
+
+        if (e.IsSuccessStatusCode)
+        {
+            //Atualiza tabela
+            Usuario U = await e.Content.ReadFromJsonAsync<Usuario>();
+            criado.Id = U.Id;
+            listaUsuarios.Add(criado);
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Erro ao adicionar");
+        }
+    }
+
 }
