@@ -77,10 +77,10 @@ namespace Foemulario3.Server.Controllers
             return Ok();
         }
 
-        [HttpDelete("{nome}")]
-        public IActionResult DeletaUsuario(string nome)
+        [HttpDelete("{id}")]
+        public IActionResult DeletaUsuario(int id)
         {
-            Usuario usuario = _controlaBanco.Usuarios.FirstOrDefault(p => p.Nome == nome);
+            Usuario usuario = _controlaBanco.Usuarios.FirstOrDefault(p => p.Id == id);
 
             _controlaBanco.Usuarios.Remove(usuario);
             _controlaBanco.SaveChanges();
